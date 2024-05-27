@@ -1,0 +1,57 @@
+# PlatformIO specific files
+**/.pio/
+**/.vscode/
+**/.clangd/
+**/.clangd-cache/
+
+# Build files and directories
+build/
+platformio.ini.swp
+
+# User-specific files
+*.code-workspace
+.vscode/
+.clangd/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Compiled object files, binaries, and debugs
+*.elf
+*.bin
+*.hex
+*.map
+
+# C++ specific
+*.obj
+*.o
+*.d
+
+# Other temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.swn
+*.orig
+*.rej
+
+# Libraries
+lib/
+
+# PlatformIO unit test output
+test_output/
+
+# Generated documentation
+docs/
+
+# PlatformIO project environments
+.pioenvs/
