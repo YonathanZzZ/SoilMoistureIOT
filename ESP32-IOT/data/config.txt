@@ -1,0 +1,4 @@
+WIFI_PASSWORD=some_password
+WIFI_NAME=some_wifi_network_name
+EMAIL=email@example.com
+FLOWER_ID=some_flower_id
