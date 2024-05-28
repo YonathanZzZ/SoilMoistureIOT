@@ -2,7 +2,6 @@
 #include "WiFi.h"
 #include <SPIFFS.h>
 #include <LittleFS.h>
-#include <unordered_map>
 
 struct Config{
     String wifi_name;
@@ -26,6 +25,8 @@ struct Config{
 #define MAX_VAL 4095 //max value when reading analog pin (12 bit ADC)
 
 TaskHandle_t task1_handle = NULL;
+int dryValue = 4000; //these are generic values to be used before implementing a calibration feature
+int wetValue = 1000;
 
 bool connectToWiFi() {
     Serial.print("Connecting to WiFi");
@@ -92,21 +93,31 @@ void takeMeasurements(int measurements[]){
     }
 }
 
-int getMedianMoisture(){
+int getMedianMoisture(int measurements[]){
     // this function assumes the sensor is connected to the pin. if it isn't, values would fluctuate between two extremes.
     // to get a stable (identifiable) value when no sensor is connected (floating pin), use a pull-down or pull-up resistor
 
-    int measurements[NUM_OF_SAMPLES];
     takeMeasurements(measurements);
     std::sort(measurements, measurements + NUM_OF_SAMPLES);
 
     return measurements[NUM_OF_SAMPLES / 2]; // assuming odd number of samples
 }
 
+int getMoisturePercentage(int measuredValue){
+    //convert the range between wetValue and dryValue to 0 - 100 (percentage)
+    return map(measuredValue, dryValue, wetValue, 0, 100);
+}
 
 void task1(void *params) {
     for (;;) {
         Serial.print("Task executing");
+
+        int measurements[NUM_OF_SAMPLES];
+        takeMeasurements(measurements);
+        int med = getMedianMoisture(measurements);
+        int percentMoisture = getMoisturePercentage(med);
+
+        //TODO call function to send http request. the function should receive the percentMoisture
         
         vTaskDelay(1000 / portTICK_PERIOD_MS);// suspend for 1 sec
     }
