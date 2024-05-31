@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Device {
+  id           String        @id @db.Char(36)
+  email        String        @db.VarChar(255)
+  created_at   DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?     @default(now()) @db.Timestamp(0)
+  last_used_at DateTime?     @db.Timestamp(0)
+  user         User          @relation(fields: [email], references: [email], onDelete: NoAction, onUpdate: NoAction, map: "Device_ibfk_1")
+  measurements  Measurement[]
+
+  @@index([email], map: "email")
+}
+
+model Measurement {
+  id                  Int       @id @default(autoincrement())
+  deviceID            String    @db.Char(36)
+  moisture_percentage Int       @db.TinyInt
+  created_at          DateTime? @db.Timestamp(0)
+  device              Device    @relation(fields: [deviceID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Measurement_ibfk_1")
+
+  @@index([deviceID], map: "deviceID")
+}
+
+model User {
+  email         String    @id @db.VarChar(255)
+  password      String    @db.Char(60)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+  last_login_at DateTime? @db.Timestamp(0)
+  devices        Device[]
+}
