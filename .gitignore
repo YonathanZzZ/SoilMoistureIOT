@@ -7,12 +7,15 @@
 # Build files and directories
 build/
 platformio.ini.swp
+cmake-build-debug/
 
 # User-specific files
 *.code-workspace
 .vscode/
 .clangd/
 .idea/
+node_modules/
+*.env
 
 # OS generated files
 .DS_Store
