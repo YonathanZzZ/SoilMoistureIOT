@@ -1,45 +1,50 @@
 #include <Arduino.h>
 #include "WiFi.h"
-#include <SPIFFS.h>
 #include <LittleFS.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 
-struct Config{
+struct Config
+{
     String wifi_name;
     String wifi_pass;
     String email;
     String flower_id;
-};
+} config;
 
-//when using NVS, the max length for a key is 15 chars. values can be:
-//integer types: uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t
-//zero-terminated string
-//variable length binary data (blob)
+// when using NVS, the max length for a key is 15 chars. values can be:
+// integer types: uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t
+// zero-terminated string
+// variable length binary data (blob)
 
-#define WIFI_NETWORK "My Network"
-#define WIFI_PASSWORD "somePassword"
 #define WIFI_TIMEOUT_MS 20000
 #define CONFIG_FILE_PATH "../data/config.txt"
-#define SENSOR_ANALOG_PIN 36 //assuming the AOUT pin of the sensor is connected to pin 36
+#define SENSOR_ANALOG_PIN 36 // assuming the AOUT pin of the sensor is connected to pin 36
 #define NUM_OF_SAMPLES 5
 #define MEASUREMENT_DELAY_MS 100
-#define MAX_VAL 4095 //max value when reading analog pin (12 bit ADC)
+#define MAX_VAL 4095 // max value when reading analog pin (12 bit ADC)
+#define BAUD_RATE 115200
+#define MAX_HTTP_ATTEMPTS 3
 
 TaskHandle_t task1_handle = NULL;
-int dryValue = 4000; //these are generic values to be used before implementing a calibration feature
+int dryValue = 4000; // these are generic values to be used before implementing a calibration feature
 int wetValue = 1000;
 
-bool connectToWiFi() {
+bool connectToWiFi()
+{
     Serial.print("Connecting to WiFi");
-    WiFi.mode(WIFI_MODE_STA); //set mode for connecting to an existing network
-    WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
+    WiFi.mode(WIFI_MODE_STA); // set mode for connecting to an existing network
+    WiFi.begin(config.wifi_name, config.wifi_pass);
 
     unsigned long startAttemptTime = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < WIFI_TIMEOUT_MS) {
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < WIFI_TIMEOUT_MS)
+    {
         Serial.print(".");
-        delay(100);
+        delay(1000);
     }
 
-    if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED)
+    {
         Serial.print("WiFi connection failed");
         return false;
     }
@@ -50,50 +55,76 @@ bool connectToWiFi() {
     return true;
 }
 
-bool extractCredentialsFromConfigFile() {
-    //TODO read about SmartConfig for a possible alternative
+bool extractCredentialsFromConfigFile()
+{
 
-    // Mount SPIFFS filesystem
-    if(!LittleFS.begin()){
+    // Mount LittleFS filesystem
+    if (!LittleFS.begin())
+    {
         Serial.println("LittleFS mount failed");
         return false;
     }
 
     // Open config file
     File configFile = LittleFS.open(CONFIG_FILE_PATH, "r");
-    if(!configFile){
+    if (!configFile)
+    {
         Serial.print("Failed to open config file");
         return false;
     }
 
     String line;
-    while (configFile.available()){
+    while (configFile.available())
+    {
         line = configFile.readStringUntil('\n');
         int separatorPos = line.indexOf('=');
-        if(separatorPos > 0){
+        if (separatorPos > 0)
+        {
             String key = line.substring(0, separatorPos).c_str();
             String value = line.substring(separatorPos + 1).c_str();
 
-            //TODO add logic to check if key is of the three expected (WIFI_NAME, WIFI_PASS, FLOWER_ID) and then save each in the correct global var.
-            //
+            if (key == "WIFI_NAME")
+            {
+                config.wifi_name = value;
+            }
+            else if (key == "WIFI_PASS")
+            {
+                config.wifi_pass = value;
+            }
+
+            else if (key == "EMAIL")
+            {
+                config.email = value;
+            }
+            else if (key == "FLOWER_ID")
+            {
+                config.flower_id = value;
+            }
         }
     }
 
     configFile.close();
+    
+    bool configCheckRes = true;
+    if(config.email.isEmpty()  || config.flower_id.isEmpty() || config.wifi_name.isEmpty() || config.wifi_pass.isEmpty()){
+        Serial.print("One or more config fields is empty");
+        configCheckRes = false;
+    }
 
-    //TODO check that all 3 required fields were extracted and saved in global vars (check that they're not null or empty strings)
-
-    return true;
+    return configCheckRes;
 }
 
-void takeMeasurements(int measurements[]){
-    for(int i = 0; i < NUM_OF_SAMPLES; ++i){
+void takeMeasurements(int measurements[])
+{
+    for (int i = 0; i < NUM_OF_SAMPLES; ++i)
+    {
         measurements[i] = analogRead(SENSOR_ANALOG_PIN);
         delay(MEASUREMENT_DELAY_MS);
     }
 }
 
-int getMedianMoisture(int measurements[]){
+int getMedianMoisture(int measurements[])
+{
     // this function assumes the sensor is connected to the pin. if it isn't, values would fluctuate between two extremes.
     // to get a stable (identifiable) value when no sensor is connected (floating pin), use a pull-down or pull-up resistor
 
@@ -103,13 +134,53 @@ int getMedianMoisture(int measurements[]){
     return measurements[NUM_OF_SAMPLES / 2]; // assuming odd number of samples
 }
 
-int getMoisturePercentage(int measuredValue){
-    //convert the range between wetValue and dryValue to 0 - 100 (percentage)
+int getMoisturePercentage(int measuredValue)
+{
+    // convert the range between wetValue and dryValue to 0 - 100 (percentage)
     return map(measuredValue, dryValue, wetValue, 0, 100);
 }
 
-void task1(void *params) {
-    for (;;) {
+// ---------- HTTP REQUEST -------------
+
+bool sendMeasurement(int measurement)
+{
+    String url = "http://backend_address:80/updates";
+
+    WiFiClient client;
+    HTTPClient http;
+
+    http.begin(client, url);
+    http.addHeader("Content-Type", "application/json");
+
+    JsonDocument jsonDoc;
+    jsonDoc["email"] = config.email;
+    jsonDoc["id"] = config.flower_id;
+    jsonDoc["value"] = measurement;
+
+    String jsonString;
+    serializeJson(jsonDoc, jsonString);
+
+    int responseCode = http.POST(jsonString);
+
+    http.end();
+
+    bool res = true;
+    if (responseCode != 200)
+    {
+        res = false;
+        Serial.print("HTTP request failed. Status code: ");
+        Serial.print(responseCode);
+    }
+
+    return res;
+}
+
+// ---------- END OF HTTP REQUEST -------------
+
+void task1(void *params)
+{
+    for (;;)
+    {
         Serial.print("Task executing");
 
         int measurements[NUM_OF_SAMPLES];
@@ -117,38 +188,47 @@ void task1(void *params) {
         int med = getMedianMoisture(measurements);
         int percentMoisture = getMoisturePercentage(med);
 
-        //TODO call function to send http request. the function should receive the percentMoisture
-        
-        vTaskDelay(1000 / portTICK_PERIOD_MS);// suspend for 1 sec
+        bool wifiRes = connectToWiFi();
+        if (!wifiRes)
+        {
+            return;
+        }
+
+        int attempts = 0;
+        while (!sendMeasurement(percentMoisture) && attempts < MAX_HTTP_ATTEMPTS)
+        {
+            ++attempts;
+            delay(1000);
+        }
+
+        WiFi.disconnect(true);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // suspend for 1 sec
     }
 }
 
-void setup() {
-// write your initialization code here
-    Serial.begin(9600); // start serial communication //TODO find correct baud rate for esp32
+void setup()
+{
+    // initialization
+    Serial.begin(BAUD_RATE); // start serial communication
 
     bool credentialsRes = extractCredentialsFromConfigFile();
-    if(!credentialsRes){
+    if (!credentialsRes)
+    {
         return;
-        //Note: the loop() function will still run!
-    }
-
-    bool wifiRes = connectToWiFi();
-    if(!wifiRes){
-        return;
+        // Note: the loop() function will still run!
     }
 
     xTaskCreate(
-            task1, //function to run
-            "Task 1", // task name
-            1000, //stack size
-            NULL, //task params
-            1, // task priority
-            &task1_handle
-    );
+        task1,    // function to run
+        "Task 1", // task name
+        1000,     // stack size
+        NULL,     // task params
+        1,        // task priority
+        &task1_handle);
 }
 
-void loop() {
-// write your code here
-
+void loop()
+{
+    // write your code here
 }
