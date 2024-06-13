@@ -1,4 +1,4 @@
-WIFI_PASSWORD=some_password
-WIFI_NAME=some_wifi_network_name
-EMAIL=email@example.com
-FLOWER_ID=some_flower_id
+WIFI_NAME=Yakov
+WIFI_PASS=bnwXp914s
+DEVICE_ID=be981e00-c4ca-46ff-8e33-d9ad426cac5a
+DEVICE_SECRET_KEY=2834c46d-bdd5-4ad1-971c-450430606884

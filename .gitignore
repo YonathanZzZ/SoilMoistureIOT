@@ -8,6 +8,7 @@
 build/
 platformio.ini.swp
 cmake-build-debug/
+coverage/
 
 # User-specific files
 *.code-workspace

@@ -8,18 +8,13 @@ struct Config
 {
     String wifi_name;
     String wifi_pass;
-    String email;
-    String flower_id;
+    String device_id;
+    String device_secret_key;
 } config;
 
-// when using NVS, the max length for a key is 15 chars. values can be:
-// integer types: uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t
-// zero-terminated string
-// variable length binary data (blob)
-
 #define WIFI_TIMEOUT_MS 20000
-#define CONFIG_FILE_PATH "../data/config.txt"
-#define SENSOR_ANALOG_PIN 36 // assuming the AOUT pin of the sensor is connected to pin 36
+#define CONFIG_FILE_PATH "/config.txt"
+#define SENSOR_PIN 2 // assuming the AOUT pin of the sensor is connected to pin 2
 #define NUM_OF_SAMPLES 5
 #define MEASUREMENT_DELAY_MS 100
 #define MAX_VAL 4095 // max value when reading analog pin (12 bit ADC)
@@ -32,44 +27,41 @@ int wetValue = 1000;
 
 bool connectToWiFi()
 {
-    Serial.print("Connecting to WiFi");
     WiFi.mode(WIFI_MODE_STA); // set mode for connecting to an existing network
     WiFi.begin(config.wifi_name, config.wifi_pass);
 
     unsigned long startAttemptTime = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < WIFI_TIMEOUT_MS)
     {
-        Serial.print(".");
+        Serial.println(".");
         delay(1000);
     }
 
     if (WiFi.status() != WL_CONNECTED)
     {
-        Serial.print("WiFi connection failed");
+        Serial.println("WiFi connection failed");
         return false;
     }
 
-    Serial.print("WiFi connected. Device IP:");
-    Serial.print(WiFi.localIP().toString());
+    Serial.println("WiFi connected. Device IP:");
+    Serial.println(WiFi.localIP().toString());
 
     return true;
 }
 
 bool extractCredentialsFromConfigFile()
 {
-
     // Mount LittleFS filesystem
-    if (!LittleFS.begin())
+    if (!LittleFS.begin(true)) //format littleFS if failed
     {
         Serial.println("LittleFS mount failed");
         return false;
     }
 
-    // Open config file
     File configFile = LittleFS.open(CONFIG_FILE_PATH, "r");
     if (!configFile)
     {
-        Serial.print("Failed to open config file");
+        Serial.println("Failed to open config file");
         return false;
     }
 
@@ -87,18 +79,20 @@ bool extractCredentialsFromConfigFile()
             {
                 config.wifi_name = value;
             }
+
             else if (key == "WIFI_PASS")
             {
                 config.wifi_pass = value;
             }
 
-            else if (key == "EMAIL")
+            else if (key == "DEVICE_SECRET_KEY")
             {
-                config.email = value;
+                config.device_secret_key = value;
             }
-            else if (key == "FLOWER_ID")
+
+            else if (key == "DEVICE_ID")
             {
-                config.flower_id = value;
+                config.device_id = value;
             }
         }
     }
@@ -106,19 +100,21 @@ bool extractCredentialsFromConfigFile()
     configFile.close();
     
     bool configCheckRes = true;
-    if(config.email.isEmpty()  || config.flower_id.isEmpty() || config.wifi_name.isEmpty() || config.wifi_pass.isEmpty()){
-        Serial.print("One or more config fields is empty");
+    if(config.device_id.isEmpty() || config.device_secret_key.isEmpty() || config.wifi_name.isEmpty() || config.wifi_pass.isEmpty()){
+        Serial.println("One or more config fields is empty");
         configCheckRes = false;
     }
 
     return configCheckRes;
 }
 
-void takeMeasurements(int measurements[])
+void takeMeasurements(int measurements[], int num_of_measurements)
 {
-    for (int i = 0; i < NUM_OF_SAMPLES; ++i)
+    for (int i = 0; i < num_of_measurements; ++i)
     {
-        measurements[i] = analogRead(SENSOR_ANALOG_PIN);
+        measurements[i] = analogRead(SENSOR_PIN);
+        Serial.println("Measurement: ");
+        Serial.println(measurements[i]);
         delay(MEASUREMENT_DELAY_MS);
     }
 }
@@ -127,35 +123,44 @@ int getMedianMoisture(int measurements[])
 {
     // this function assumes the sensor is connected to the pin. if it isn't, values would fluctuate between two extremes.
     // to get a stable (identifiable) value when no sensor is connected (floating pin), use a pull-down or pull-up resistor
-
-    takeMeasurements(measurements);
     std::sort(measurements, measurements + NUM_OF_SAMPLES);
 
     return measurements[NUM_OF_SAMPLES / 2]; // assuming odd number of samples
 }
 
-int getMoisturePercentage(int measuredValue)
+long getMoisturePercentage(int measuredValue)
 {
     // convert the range between wetValue and dryValue to 0 - 100 (percentage)
-    return map(measuredValue, dryValue, wetValue, 0, 100);
+    long value = map(measuredValue, dryValue, wetValue, 0, 100);
+    if(value > 100){
+        value = 100;
+    }else if(value < 0){
+        value = 0;
+    }
+
+    return value;
 }
 
 // ---------- HTTP REQUEST -------------
 
 bool sendMeasurement(int measurement)
 {
-    String url = "http://backend_address:80/updates";
+    Serial.println("in sendMeasurement");
+
+    String url = "http://192.168.1.217:8080/measurements"; 
 
     WiFiClient client;
     HTTPClient http;
 
     http.begin(client, url);
+
     http.addHeader("Content-Type", "application/json");
+    http.addHeader("Device-Identifier", config.device_id);
+    http.addHeader("Device-Secret", config.device_secret_key);
 
     JsonDocument jsonDoc;
-    jsonDoc["email"] = config.email;
-    jsonDoc["id"] = config.flower_id;
-    jsonDoc["value"] = measurement;
+    jsonDoc["measuredValue"] = measurement;
+    jsonDoc["Hello"] = "Nice";
 
     String jsonString;
     serializeJson(jsonDoc, jsonString);
@@ -164,13 +169,17 @@ bool sendMeasurement(int measurement)
 
     http.end();
 
+    Serial.println("sent measurement via HTTP");
+
     bool res = true;
     if (responseCode != 200)
     {
         res = false;
-        Serial.print("HTTP request failed. Status code: ");
-        Serial.print(responseCode);
+        Serial.println("HTTP request failed");
     }
+    
+    Serial.println("HTTP response code: ");
+    Serial.println(responseCode);
 
     return res;
 }
@@ -179,31 +188,57 @@ bool sendMeasurement(int measurement)
 
 void task1(void *params)
 {
+    UBaseType_t uxHighWaterMark;
+
     for (;;)
     {
-        Serial.print("Task executing");
+        Serial.println("Task executing");
 
         int measurements[NUM_OF_SAMPLES];
-        takeMeasurements(measurements);
+        takeMeasurements(measurements, NUM_OF_SAMPLES);
         int med = getMedianMoisture(measurements);
-        int percentMoisture = getMoisturePercentage(med);
+        long percentMoisture = getMoisturePercentage(med);
 
+        Serial.println("Moisture percentage: ");
+        Serial.println(percentMoisture);
+
+        Serial.println("Connecting to WiFi");
         bool wifiRes = connectToWiFi();
         if (!wifiRes)
         {
+            Serial.print("Failed to connect to WiFi");
             return;
         }
 
-        int attempts = 0;
-        while (!sendMeasurement(percentMoisture) && attempts < MAX_HTTP_ATTEMPTS)
+        Serial.println("Connected to WiFi");
+
+        Serial.println("Sending measurement to server");
+
+        int attempts = 1;
+
+        bool measurementRes = sendMeasurement(percentMoisture);
+        while (!measurementRes && attempts < MAX_HTTP_ATTEMPTS)
         {
+            Serial.println("Retrying to send measurement");
+
+            measurementRes = sendMeasurement(percentMoisture);
+
             ++attempts;
-            delay(1000);
+            delay(5000);
         }
+
+        Serial.println("measurement res:");
+        Serial.println(measurementRes);
+
+        Serial.println("Disconnecting WiFi");
 
         WiFi.disconnect(true);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS); // suspend for 1 sec
+        vTaskDelay(1000 * 5 / portTICK_PERIOD_MS); // suspend for 5 seconds
+
+        uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL); //check stack size
+        Serial.println("stack size:");
+        Serial.println(uxHighWaterMark);
     }
 }
 
@@ -216,13 +251,12 @@ void setup()
     if (!credentialsRes)
     {
         return;
-        // Note: the loop() function will still run!
     }
 
     xTaskCreate(
         task1,    // function to run
         "Task 1", // task name
-        1000,     // stack size
+        50000,     // stack size
         NULL,     // task params
         1,        // task priority
         &task1_handle);
@@ -230,5 +264,5 @@ void setup()
 
 void loop()
 {
-    // write your code here
 }
+

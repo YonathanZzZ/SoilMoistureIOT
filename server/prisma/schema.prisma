@@ -8,32 +8,29 @@ datasource db {
 }
 
 model Device {
-  id           String        @id @db.Char(36)
-  email        String        @db.VarChar(255)
-  created_at   DateTime?     @default(now()) @db.Timestamp(0)
-  updated_at   DateTime?     @default(now()) @db.Timestamp(0)
-  last_used_at DateTime?     @db.Timestamp(0)
-  user         User          @relation(fields: [email], references: [email], onDelete: Cascade, onUpdate: NoAction, map: "Device_ibfk_1")
-  measurements  Measurement[]
+  uuid         String        @id @default(uuid()) 
+  secretKey    String        @db.Char(60) //hashed length
+  userID       Int
+  user         User         @relation(fields: [userID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Device_ibfk_1")
+  name         String
+  description  String?
+  measurements Measurement[]
 
-  @@index([email], map: "email")
+  @@index([userID], map: "userID")
 }
 
 model Measurement {
-  id                  Int       @id @default(autoincrement())
-  deviceID            String    @db.Char(36)
-  moisture_percentage Int       @db.TinyInt
-  created_at          DateTime? @db.Timestamp(0)
-  device              Device    @relation(fields: [deviceID], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Measurement_ibfk_1")
+  id                  Int    @id @default(autoincrement())
+  deviceID            String
+  moisture_percentage Int    @db.TinyInt
+  device              Device @relation(fields: [deviceID], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "Measurement_ibfk_1")
 
   @@index([deviceID], map: "deviceID")
 }
 
 model User {
-  email         String    @id @db.VarChar(255)
-  password      String    @db.Char(60)
-  created_at    DateTime? @default(now()) @db.Timestamp(0)
-  updated_at    DateTime? @default(now()) @db.Timestamp(0)
-  last_login_at DateTime? @db.Timestamp(0)
-  devices        Device[]
+  id       Int      @id @default(autoincrement())
+  email    String   @unique(map: "email")
+  password String   @db.Char(60) //hashed length
+  devices  Device[]
 }
