@@ -38,7 +38,7 @@ app.use(
     saveUninitialized: false, //don't save empty session in the store
     resave: false, //do not save session to store if it wasn't modified during the request
     cookie: {
-      secure: isProduction ? true : false, //allow saving cookie via HTTPS only
+      secure: isProduction, //allow saving cookie via HTTPS only
       httpOnly: true, // client side js can't read the cookie
       maxAge: 30 * MS_IN_MIN, //30 min
     },
