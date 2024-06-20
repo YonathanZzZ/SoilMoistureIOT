@@ -21,7 +21,7 @@ const app = express();
 
 app.use(cors({
   origin: "http://localhost:3000", //TODO use env var for client host
-  credentials: true //allow cookies
+  credentials: true, //allow cookies
 }));
 
 const redisClient = redis.createClient();
@@ -38,7 +38,7 @@ app.use(
     saveUninitialized: false, //don't save empty session in the store
     resave: false, //do not save session to store if it wasn't modified during the request
     cookie: {
-      secure: isProduction, //allow saving cookie via HTTPS only
+      secure: isProduction, //allow saving cookie via HTTPS only in production mode
       httpOnly: true, // client side js can't read the cookie
       maxAge: 30 * MS_IN_MIN, //30 min
     },

@@ -29,6 +29,7 @@ const passwordSchema = zod
   .refine((password) => /[0-9]/.test(password));
 
 const userSchema = zod.object({
+  name: zod.string(),
   email: emailSchema,
   password: passwordSchema,
 });
@@ -37,13 +38,13 @@ export const registerWithPassword = async (
   req: express.Request,
   res: express.Response
 ) => {
-  try {
+  try {    
     const schemaCheck = userSchema.safeParse(req.body);
     if (!schemaCheck.success) {
       return res.sendStatus(HttpStatus.BAD_REQUEST);
     }
 
-    const { email, password } = schemaCheck.data;
+    const { name, email, password } = schemaCheck.data;
 
     const existingUser = await getUser(email);
     if (existingUser) {
@@ -51,7 +52,7 @@ export const registerWithPassword = async (
     }
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const newUser = await createUser(email, hashedPassword);
+    const newUser = await createUser(name, email, hashedPassword);
 
     res.sendStatus(HttpStatus.CREATED);
   } catch (error) {
@@ -60,7 +61,7 @@ export const registerWithPassword = async (
   }
 };
 
-export const login = async (req: express.Request, res: express.Response) => {
+export const login = async (_req: express.Request, res: express.Response) => {
   res.sendStatus(HttpStatus.OK);
 };
 
@@ -162,4 +163,9 @@ export const logoutUser = (req: Request, res: Response) => {
       res.send();
     });
   });
+};
+
+export const authCheck = (_req: Request, res: Response) => {
+  console.log('in authCheck (user passed through isAuthenticated middleware)');
+  res.send();
 };

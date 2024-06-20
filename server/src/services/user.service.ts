@@ -7,25 +7,30 @@ interface UserUpdate {
   password?: string; //hashed password
 }
 
-export const createUser = async (email: string, password: string) => {
+export const createUser = async (
+  name: string,
+  email: string,
+  password: string
+) => {
   return prisma.user.create({
     data: {
-        email: email,
-        password: password
+      name: name,
+      email: email,
+      password: password,
     },
   });
 };
 
 export const deleteUserByEmail = async (email: string) => {
   await prisma.user.delete({
-  where: {
-    email: email,
-  },
-});
+    where: {
+      email: email,
+    },
+  });
 };
 
 export const deleteUserByID = async (id: number) => {
-    await prisma.user.delete({
+  await prisma.user.delete({
     where: {
       id: id,
     },

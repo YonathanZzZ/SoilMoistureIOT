@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import passport from 'passport';
-import {registerWithPassword, login, deleteUser, updateUserPassword, updateUserEmail, logoutUser} from '../controllers/user.controller';
+import {registerWithPassword, login, deleteUser, updateUserPassword, updateUserEmail, logoutUser, authCheck} from '../controllers/user.controller';
 import { isAuthenticated } from '../middleware/auth.middleware';
 const router = Router();
 
@@ -10,5 +10,6 @@ router.patch('/password', isAuthenticated, updateUserPassword);
 router.patch('/email', isAuthenticated, updateUserEmail);
 router.post('/login/password', passport.authenticate('local'), login);
 router.post('/logout', isAuthenticated, logoutUser);
+router.get('/check-auth', isAuthenticated, authCheck);
 
 export default router;
