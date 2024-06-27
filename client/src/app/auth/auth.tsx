@@ -24,7 +24,6 @@ export default function Auth(props: React.PropsWithChildren) {
       if (res.ok) {
         console.log('user validated');
         setIsAuthenticated(true);
-      } else {
       }
     });
   }, []);

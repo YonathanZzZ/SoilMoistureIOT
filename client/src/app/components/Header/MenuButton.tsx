@@ -2,17 +2,16 @@ import { IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 interface Props {
-  onClick: () => void;
+  handleDrawerToggle: () => void;
 }
 
-export default function MenuButton({ onClick }: Props) {
+export default function MenuButton({ handleDrawerToggle }: Props) {
   return (
     <IconButton
-      size="large"
-      edge="start"
       color="inherit"
-      aria-label="open drawer"
-      onClick={onClick}
+      edge="start"
+      onClick={handleDrawerToggle}
+      sx={{ mr: 2, display: { sm: "none" } }}
     >
       <MenuIcon />
     </IconButton>

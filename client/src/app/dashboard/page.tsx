@@ -1,7 +1,6 @@
 'use client'
 
 import withAuth from "../auth/withAuth";
-import Header from "../components/header/Header";
 
 function Dashboard(){
   return(
@@ -9,4 +8,5 @@ function Dashboard(){
   )
 }
 
-export default withAuth(Dashboard);
+// export default withAuth(Dashboard); //TODO use this in production
+export default Dashboard; //non protected route for development

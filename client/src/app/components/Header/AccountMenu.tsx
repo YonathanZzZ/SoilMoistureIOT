@@ -10,7 +10,6 @@ import { usePathname, useRouter } from "next/navigation";
 export default function AccountMenu() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const auth = useAuth();
-  const pathname = usePathname();
 
   function handleClick (event: React.MouseEvent<HTMLButtonElement>) {
     setAnchorEl(event.currentTarget);
@@ -23,10 +22,6 @@ export default function AccountMenu() {
   function handleSignoutButton(){
     auth.logout();
   };
-
-  // function handleMyAccountButton(){
-  //   router.push(`${router.asPath}/account-settings`);
-  // }
 
   return (
     <>
@@ -51,7 +46,7 @@ export default function AccountMenu() {
           horizontal: "center",
         }}
       >
-        <Link href={`${pathname}/account-settings`}>
+        <Link href='/dashboard/account-settings'>
         <MenuItem>My account</MenuItem>
         </Link>
         

@@ -31,8 +31,6 @@ export default function Signup() {
   }
 
   function validate(values: { email: string; password: string }) {
-    console.log("values in validate: ", values);
-
     const errors = { email: "", password: "" };
     
     if (
