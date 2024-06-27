@@ -24,6 +24,7 @@ model Measurement {
   deviceID            String
   moisture_percentage Int    @db.TinyInt
   device              Device @relation(fields: [deviceID], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "Measurement_ibfk_1")
+  createdAt           DateTime @default(now())
 
   @@index([deviceID], map: "deviceID")
 }
