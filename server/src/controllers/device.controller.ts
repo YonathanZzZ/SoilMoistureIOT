@@ -5,13 +5,14 @@ import {
   deleteDevice,
   getAllDevicesByUserID,
   updateDevice,
+  getDeviceDataById
 } from "../services/device.service";
 import { HttpStatus } from "../httpStatuses";
 import zod from "zod";
 
 export const getAllUserDevices = async (req: Request, res: Response) => {
-  const userID = (req.user as SessionUser).id;
-  const devicesData = await getAllDevicesByUserID(userID);
+  const userId = (req.user as SessionUser).id;
+  const devicesData = await getAllDevicesByUserID(userId);
   if (!devicesData) {
     return res.sendStatus(HttpStatus.NOT_FOUND);
   }
@@ -22,7 +23,30 @@ export const getAllUserDevices = async (req: Request, res: Response) => {
 const DeviceDataSchema = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
+  image: zod.string().optional(),
 });
+
+const DeviceDataRequestSchema = zod.object({
+  uuid: zod.string().uuid(),
+});
+
+export const getDeviceData = async (req: Request, res: Response) => {
+  const schemaCheck = DeviceDataRequestSchema.safeParse(req.params);
+  if (!schemaCheck.success) {
+    return res.sendStatus(HttpStatus.BAD_REQUEST);
+  }
+
+  const deviceId = schemaCheck.data.uuid;
+  
+  const userId = (req.user as SessionUser).id;
+  
+  const deviceData = await getDeviceDataById(deviceId, userId);
+  if(!deviceData){
+    res.sendStatus(HttpStatus.NOT_FOUND);
+  }
+
+  res.json(deviceData);
+}
 
 export const addDeviceToUser = async (req: Request, res: Response) => {
   const schemaCheck = DeviceDataSchema.safeParse(req.body);
@@ -31,11 +55,11 @@ export const addDeviceToUser = async (req: Request, res: Response) => {
   }
 
   const data = schemaCheck.data;
-  const userID = (req.user as SessionUser).id;
+  const userId = (req.user as SessionUser).id;
 
-  const deviceData = await addDevice(userID, data);
+  const deviceCredentials = await addDevice(userId, data);
 
-  res.json(deviceData);
+  res.json(deviceCredentials);
 };
 
 const uuidSchema = zod.string().uuid();
@@ -48,9 +72,9 @@ export const deleteDeviceFromUser = async (req: Request, res: Response) => {
 
   const deviceUUID = schemaCheck.data; 
 
-  const userID = (req.user as SessionUser).id;
+  const userId = (req.user as SessionUser).id;
 
-  const deleteRes = await deleteDevice(userID, deviceUUID);
+  const deleteRes = await deleteDevice(userId, deviceUUID);
   if(!deleteRes){
     return res.sendStatus(HttpStatus.NOT_FOUND);
   }
@@ -78,9 +102,9 @@ export const updateUserDevice = async (req: Request, res: Response) => {
 
   const updateData = updateSchemaCheck.data;
 
-  const userID = (req.user as SessionUser).id;
+  const userId = (req.user as SessionUser).id;
 
-  const updateRes = await updateDevice(userID, deviceUUID, updateData);
+  const updateRes = await updateDevice(userId, deviceUUID, updateData);
   if(!updateRes){
     return res.sendStatus(HttpStatus.NOT_FOUND);
   }

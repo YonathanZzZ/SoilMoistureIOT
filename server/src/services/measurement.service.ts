@@ -12,6 +12,7 @@ export const getAllMeasurementsByDeviceID = (userID: number, uuid: string) => {
     select: {
       id: true,
       moisture_percentage: true,
+      createdAt: true,
     },
     where: {
       deviceID: uuid,

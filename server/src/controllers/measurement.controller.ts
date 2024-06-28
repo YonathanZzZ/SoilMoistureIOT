@@ -53,13 +53,11 @@ export const deleteMeasurementFromDevice = async (req: Request, res: Response) =
 }
 
 export const getAllMeasurementsOfDevice = async (req: Request, res: Response) => {
+  
   const uuid = req.params.uuid;
   const userID = (req.user as SessionUser).id;
   
   const measurements = await getAllMeasurementsByDeviceID(userID, uuid);
-  if(measurements.length === 0){
-    return res.sendStatus(HttpStatus.NOT_FOUND);
-  }
 
   res.json(measurements);
 }

@@ -166,6 +166,5 @@ export const logoutUser = (req: Request, res: Response) => {
 };
 
 export const authCheck = (_req: Request, res: Response) => {
-  console.log('in authCheck (user passed through isAuthenticated middleware)');
   res.send();
 };

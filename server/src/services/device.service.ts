@@ -15,7 +15,7 @@ interface DeviceData {
   description?: string;
 }
 
-export const addDevice = async (userID: number ,deviceData: DeviceData) => {
+export const addDevice = async (userID: number, deviceData: DeviceData) => {
   const secretKey = uuid();
   const hashedSecretKey = await bcrypt.hash(secretKey, SALT_ROUNDS);
 
@@ -24,6 +24,15 @@ export const addDevice = async (userID: number ,deviceData: DeviceData) => {
 
   return {deviceID: device.uuid, secretKey: secretKey};
 };
+
+export const getDeviceDataById = async (id: string, userId: number) => {
+  return await prisma.device.findUnique({
+    where: {
+      uuid: id, user: {id: userId}
+    },
+
+  });
+}
 
 export const getAllDevicesByUserID = (userID: number) => {
   return prisma.device.findMany({
