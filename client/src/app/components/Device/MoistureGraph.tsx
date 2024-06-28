@@ -14,8 +14,7 @@ export default function MoistureGraph({measurements}: Props) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const filteredMeasurements = measurements.filter((measurement) => measurement.date >= sevenDaysAgo);
-  // const formattedDates = filteredMeasurements.map((measurement) => format(measurement.date, 'EEEE'))
+  const filteredMeasurements = measurements.filter((measurement) => measurement.date >= sevenDaysAgo); //only show measurements of last week
 
   return (
     <LineChart

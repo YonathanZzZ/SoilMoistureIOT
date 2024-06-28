@@ -33,7 +33,7 @@ export default function StaticDeviceData({ name, description, image }: Props) {
           elevation={3}
           component="img"
           sx={{
-            width: '100%',
+            width: '80%',
             height: '100%',
             borderRadius: "1em",
             overflow: "hidden",

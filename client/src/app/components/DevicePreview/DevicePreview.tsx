@@ -17,6 +17,9 @@ interface DeviceData {
 }
 
 export default function DevicePreview(data: DeviceData) {
+
+  console.log('deviceData in DevicePreview: ', data);
+
   return (
     <Card sx={{width: '100%', maxWidth: 375}}>
       <Link href={`/dashboard/devices/${data.id}`}>

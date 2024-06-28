@@ -4,13 +4,14 @@ import {
   Box,
   Button,
   Container,
-  Link,
   TextField,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import { useRouter } from "next/navigation";
+import NextLink from 'next/link';
+import Link from '@mui/material/Link'
 
 export default function Signup() {
   const [formValues, setFormValues] = useState({
@@ -121,7 +122,8 @@ export default function Signup() {
           <Box sx={{ display: "flex", justifyContent: "center" }}>
             <Typography color="textSecondary">
               Don't have an account?{" "}
-              <Link href="/signup" variant="body2">
+              
+              <Link href="/signup" component={NextLink} variant="body2">
                 {"Sign Up"}
               </Link>
             </Typography>

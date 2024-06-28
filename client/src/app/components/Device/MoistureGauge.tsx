@@ -42,9 +42,7 @@ export default function MoistureGauge({ moisturePercent }: Props) {
       height={120}
       startAngle={-110}
       endAngle={110}
-      value={moisturePercent}
-      margin={{ top: 0, bottom: 0, left: 0, right: 0}}
-      
+      value={moisturePercent}      
     >
       <GaugeReferenceArc />
       <GaugeValueArc />

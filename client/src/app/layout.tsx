@@ -5,6 +5,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
 import Auth from "./auth/auth";
+import QueryProvider from "./utils/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,12 +22,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CssBaseline />
-        <AppRouterCacheProvider>
-          <Auth>
-            <ThemeProvider theme={theme}>{children}</ThemeProvider>
-          </Auth>
-        </AppRouterCacheProvider>
+        <QueryProvider>
+          <CssBaseline />
+          <AppRouterCacheProvider>
+            <Auth>
+              <ThemeProvider theme={theme}>{children}</ThemeProvider>
+            </Auth>
+          </AppRouterCacheProvider>
+        </QueryProvider>
       </body>
     </html>
   );
