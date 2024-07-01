@@ -11,16 +11,16 @@ This project aims to help users monitor the moisture level in soil using an ESP3
 
 ## Features
 
-- **ESP32 Device**: 
+- **ESP32 Device (written in C++)**: 
   - Periodically measures soil moisture using a sensor.
   - Sends moisture data to the server for storage.
 
-- **Server**:
+- **Server (written in TypeScript)**:
   - User registration and authentication.
   - Device registration, providing a unique device identifier and secret key.
   - Data storage and management using MySQL (via Primsa).
 
-- **Client Webapp**:
+- **Client Webapp (written in TypeScript)**:
   - User interface for adding monitoring devices.
   - Current moisture level and graphs to visualize the moisture levels of the plants.
 
