@@ -1,67 +1,38 @@
 'use client'
 
-import { Container, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import DevicePreview from "../../components/DevicePreview/DevicePreview";
 import { useQuery } from "@tanstack/react-query";
+import { getUserDevices } from "../../http/http";
+import { WarningContext } from "../../components/WarningContext";
+import { useContext, useEffect } from "react";
+import { getErrorMessage } from "../../utils/ErrorMessages";
 
-export default function Devices() {
-  const exampleDeviceData = [
-    {
-      name: "balcony monstera",
-      id: 'some-device-id',
-      description: "My cool plant",
-      image:
-        "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg",
-    },
-    {
-      name: "balcony monstera",
-      id: 'some-device-id',
-      description: "My cool plant",
-      image:
-        "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg",
-    },
-    {
-      name: "balcony monstera",
-      id: 'some-device-id',
-      description: "My cool plant",
-      image:
-        "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg",
-    },
-    {
-      name: "balcony monstera",
-      id: 'some-device-id',
-      description: "My cool plant",
-      image:
-        "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg",
-    },
-    {
-      name: "balcony monstera",
-      id: 'some-device-id',
-      description: "My cool plant",
-      image:
-        "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg",
-    },
-  ];
+function Devices() {
+  async function fetchUserDevices(){
+    const res = await getUserDevices();
+    if(!res.success){
+      throw new CustomError("Failed to fetch Devices", res.status);
+    }
 
-  async function fetchDevices(){
-    //TODO implement and move to different file
-    const res = await fetch("http://localhost:8080/devices/", {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        "Content-Type": "application/json"
-      },
-    });
-
-    const data = await res.json();
-    console.log('data in fetchDevices: ', data);
-    return data;
+    return res.data;
   }
 
-  const {data: devices, isLoading} = useQuery({
-    queryFn: () => fetchDevices(),
+  const warningContext = useContext(WarningContext);
+  
+  const {data: devices, isLoading, error} = useQuery({
+    queryFn: () => fetchUserDevices(),
     queryKey: ["devices"],
   });
+
+  useEffect(() => {
+    if(error){
+    const customError = error as CustomError;
+    const message = getErrorMessage(customError.status);
+    warningContext?.setNewMessage(message, "error");
+    }
+    
+  }, [error]);
 
   const defaultImage = "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg";
 
@@ -72,16 +43,20 @@ export default function Devices() {
     image?: string;
   }
 
+  if(error){
+    
+    return null;
+  }
+
   if(isLoading){
+    //TODO use Skeleton component instead of text
     return <h1>Loading devices...</h1>
-  }else{
-    console.log('devices: ', devices);
   }
 
   return (
     <Grid container spacing={2}>
-      {devices?.map((device: Device) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} sx={{display: 'flex', justifyContent: 'center'}}>
+      {devices?.map((device: Device, index: number) => (
+        <Grid key={index} item xs={12} sm={6} md={4} lg={3} sx={{display: 'flex', justifyContent: 'center'}}>
           <DevicePreview
             name={device.name}
             id={device.uuid}
@@ -94,3 +69,5 @@ export default function Devices() {
     
   );
 }
+
+export default Devices;

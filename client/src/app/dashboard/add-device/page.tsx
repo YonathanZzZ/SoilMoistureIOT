@@ -3,15 +3,17 @@
 import {
   Box,
   Button,
-  Container,
   IconButton,
   TextField,
   Typography,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { addDevice } from "../../http/http";
+import { WarningContext } from "../../components/WarningContext";
+import { getErrorMessage } from "../../utils/ErrorMessages";
 
-export default function AddDevice() {
+function AddDevice() {
   const [formValues, setFormValues] = useState({
     name: "",
     description: "",
@@ -21,12 +23,13 @@ export default function AddDevice() {
     description: "",
   });
 
-  const [deviceData, setDeviceData] = useState<{
+  const [deviceCredentials, setDeviceCredentials] = useState<{
     deviceID: string;
     secretKey: string;
   } | null>(null);
 
   const [copied, setCopied] = useState(false);
+  const warningContext = useContext(WarningContext);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -37,7 +40,7 @@ export default function AddDevice() {
     const errors = { name: "", description: "" };
 
     if (!values.name) {
-      errors.name = "Invalid email address";
+      errors.name = "Please enter a device name";
     }
 
     return errors;
@@ -55,36 +58,30 @@ export default function AddDevice() {
       return;
     }
 
-    const res = await fetch("http://localhost:8080/devices", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formValues),
-    });
+    const res = await addDevice(formValues.name, formValues.description);
+    if(!res.success){
+      const errorMessage = getErrorMessage(res.status);
+      warningContext?.setNewMessage(errorMessage, 'error');
 
-    if (!res.ok) {
-      console.error("failed to register device on server");
-      //TODO handle errors
       return;
     }
 
-    const data: { deviceID: string; secretKey: string } = await res.json();
-    setDeviceData(data);
+    const credentials = res.data;
+
+    setDeviceCredentials(credentials);
   }
 
   function handleCopyClick(field: string) {
     if (field === "device-id") {
-      navigator.clipboard.writeText(deviceData!.deviceID);
+      navigator.clipboard.writeText(deviceCredentials!.deviceID);
     } else if (field === 'device-secret') {
-      navigator.clipboard.writeText(deviceData!.secretKey);
+      navigator.clipboard.writeText(deviceCredentials!.secretKey);
     }
 
     setCopied(true);
   }
 
-  return !deviceData ? (
+  return !deviceCredentials ? (
     <Box
       sx={{
         display: "flex",
@@ -151,7 +148,7 @@ export default function AddDevice() {
       <Box mt="1em">
         <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between'>
         <Typography variant="body1">
-          Device ID: {deviceData.deviceID}
+          Device ID: {deviceCredentials.deviceID}
         </Typography>
 
         <IconButton onClick={() => handleCopyClick('device-id')}>
@@ -161,7 +158,7 @@ export default function AddDevice() {
 
         <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between'>
         <Typography variant="body1">
-          Device secret key: {deviceData.secretKey}
+          Device secret key: {deviceCredentials.secretKey}
         </Typography>
 
         <IconButton onClick={() => handleCopyClick('device-secret')}>
@@ -186,3 +183,5 @@ export default function AddDevice() {
     </Box>
   );
 }
+
+export default AddDevice;

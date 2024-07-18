@@ -4,8 +4,17 @@ import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
-import Auth from "./auth/auth";
 import QueryProvider from "./utils/QueryProvider";
+import { UserProvider } from "./components/UserContext";
+import { WarningProvider } from "./components/WarningContext";
+
+import "./http/http";
+
+//MUI fonts
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,14 +31,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <QueryProvider>
-          <CssBaseline />
-          <AppRouterCacheProvider>
-            <Auth>
-              <ThemeProvider theme={theme}>{children}</ThemeProvider>
-            </Auth>
-          </AppRouterCacheProvider>
-        </QueryProvider>
+        <UserProvider>
+          <WarningProvider>
+            <QueryProvider>
+              <CssBaseline />
+              <AppRouterCacheProvider>
+                <ThemeProvider theme={theme}>{children}</ThemeProvider>
+              </AppRouterCacheProvider>
+            </QueryProvider>
+          </WarningProvider>
+        </UserProvider>
       </body>
     </html>
   );

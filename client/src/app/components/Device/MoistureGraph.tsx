@@ -1,28 +1,47 @@
-import { LineChart } from '@mui/x-charts/LineChart';
-import { format } from 'date-fns';
+import { LineChart } from "@mui/x-charts/LineChart";
 
-interface measurement{
+interface Measurement {
+  id: number;
   date: Date;
-  value: number; //moisture percentage
+  moisture_percentage: number;
 }
 
-interface Props{
-  measurements: measurement[];
+interface Props {
+  measurements: Measurement[];
 }
 
-export default function MoistureGraph({measurements}: Props) {
+export default function MoistureGraph({ measurements }: Props) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const filteredMeasurements = measurements.filter((measurement) => measurement.date >= sevenDaysAgo); //only show measurements of last week
+  const filteredMeasurements = measurements.filter(
+    (measurement) => measurement.date >= sevenDaysAgo
+  ); //only show measurements of last week
+
+  // console.log('getDay value: ', measurements[0].date.getDay()));
+
+  function customXAxisormatter(date: number) {
+    const actualDate = new Date(date);
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayIndex = actualDate.getDay();
+    return daysOfWeek[dayIndex];
+  }
 
   return (
     <LineChart
-      xAxis={[{ data: filteredMeasurements.map((measurement) => measurement.date), label: 'Day' }]}
+      dataset={filteredMeasurements}
+      xAxis={[
+        {
+          valueFormatter: customXAxisormatter,
+          disableTicks: true,
+          dataKey: "date",
+        },
+      ]}
+      yAxis={[{ min: 0, max: 100 }]}
       series={[
         {
-          data: filteredMeasurements.map((measurement) => measurement.value),
-          label: 'Moisture percent'
+          label: "Moisture percent",
+          dataKey: "moisture_percentage",
         },
       ]}
     />

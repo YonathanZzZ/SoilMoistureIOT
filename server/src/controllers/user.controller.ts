@@ -38,7 +38,7 @@ export const registerWithPassword = async (
   req: express.Request,
   res: express.Response
 ) => {
-  try {    
+  try {
     const schemaCheck = userSchema.safeParse(req.body);
     if (!schemaCheck.success) {
       return res.sendStatus(HttpStatus.BAD_REQUEST);
@@ -61,8 +61,8 @@ export const registerWithPassword = async (
   }
 };
 
-export const login = async (_req: express.Request, res: express.Response) => {
-  res.sendStatus(HttpStatus.OK);
+export const login = async (req: Request, res: Response) => {
+  res.json(req.user);
 };
 
 export const deleteUser = async (req: Request, res: Response) => {

@@ -1,10 +1,10 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from "@mui/material";
 import {
   GaugeContainer,
   GaugeValueArc,
   GaugeReferenceArc,
   useGaugeState,
-} from '@mui/x-charts/Gauge';
+} from "@mui/x-charts/Gauge";
 
 interface Props {
   moisturePercent: number;
@@ -36,24 +36,25 @@ function GaugePointer() {
 
 export default function MoistureGauge({ moisturePercent }: Props) {
   return (
-    <Box display='flex' flexDirection='column' alignItems='center' justifyContent='flex-start'>
-      <GaugeContainer
-      width={200}
-      height={120}
-      startAngle={-110}
-      endAngle={110}
-      value={moisturePercent}      
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="flex-start"
+      width='100%'
+      height='330px'
     >
-      <GaugeReferenceArc />
-      <GaugeValueArc />
-      <GaugePointer />
-    </GaugeContainer>
+      <GaugeContainer
+        startAngle={-110}
+        endAngle={110}
+        value={moisturePercent}
+      >
+        <GaugeReferenceArc />
+        <GaugeValueArc />
+        <GaugePointer />
+      </GaugeContainer>
 
-    <Typography variant='h5'>
-    {moisturePercent}%
-    </Typography>
-    
+      <Typography variant="h5">{moisturePercent}%</Typography>
     </Box>
-    
   );
 }

@@ -1,12 +1,13 @@
-import { Grid, Link, Typography } from "@mui/material";
+import { Box, Grid, Link, Paper, Typography } from "@mui/material";
 import StaticDeviceData from "./StaticData";
 import MoistureGauge from "./MoistureGauge";
 import MoistureGraph from "./MoistureGraph";
 import NextLink from 'next/link';
 
 interface Measurement {
+  id: number;
   date: Date;
-  value: number;
+  moisture_percentage: number;
 }
 
 interface Props {
@@ -16,23 +17,15 @@ interface Props {
   measurements: Measurement[];
 }
 
-const exampleMeasurements = [
-  { date: new Date("June 18, 2024 03:24:00"), value: 17 },
-  { date: new Date("June 19, 2024 03:24:00"), value: 25 },
-  { date: new Date("June 20, 2024 03:24:00"), value: 18 },
-  { date: new Date("June 21, 2024 03:24:00"), value: 30 },
-  { date: new Date("June 22, 2024 03:24:00"), value: 37 },
-  { date: new Date("June 23, 2024 03:24:00"), value: 57 },
-  { date: new Date("June 24, 2024 03:24:00"), value: 80 },
-];
-
 export default function DeviceDetails({
   name,
   description,
   image,
   measurements,
 }: Props) {
-  const lastMeasurement = exampleMeasurements[exampleMeasurements.length - 1];
+
+
+  const lastMeasurement = measurements[measurements.length - 1];
 
   return (
     <Grid container spacing={2}>
@@ -52,11 +45,16 @@ export default function DeviceDetails({
               alignItems: "center",
             }}
           >
-            <MoistureGauge moisturePercent={lastMeasurement.value} />
+            <Paper elevation={7} sx={{borderRadius: '1em'}}>
+            <MoistureGauge moisturePercent={lastMeasurement.moisture_percentage} />
+            </Paper>
+            
           </Grid>
 
           <Grid item xs={12} md={10} sx={{ height: "350px" }}>
-            <MoistureGraph measurements={exampleMeasurements} />
+            <Paper elevation={7} sx={{height: '100%', borderRadius: '1em'}}>
+            <MoistureGraph measurements={measurements} />
+            </Paper>
           </Grid>
         </>
       ) : (

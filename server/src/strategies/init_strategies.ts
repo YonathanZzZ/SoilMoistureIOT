@@ -24,7 +24,8 @@ passport.use(new LocalStrategy(
         }
 
         const sessionUser = {
-            id: user.id
+            id: user.id,
+            name: user.name,
         };
         
         return done(null, sessionUser); //user authenticated

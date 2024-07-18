@@ -1,18 +1,21 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Button,
   Container,
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
-import { useAuth } from "../auth/useAuth";
+import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import NextLink from 'next/link';
-import Link from '@mui/material/Link'
-
+import NextLink from "next/link";
+import Link from "@mui/material/Link";
+import { signIn } from "../http/http";
+import { getErrorMessage } from "../utils/ErrorMessages";
+import { UserContext } from "../components/UserContext";
+import cookies from 'js-cookie';
 export default function Signup() {
   const [formValues, setFormValues] = useState({
     email: "",
@@ -23,8 +26,11 @@ export default function Signup() {
     password: "",
   });
 
-  const auth = useAuth();
+  const [message, setMessage] = useState("");
+
   const router = useRouter();
+
+  const userContext = useContext(UserContext);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -33,7 +39,7 @@ export default function Signup() {
 
   function validate(values: { email: string; password: string }) {
     const errors = { email: "", password: "" };
-    
+
     if (
       !values.email ||
       !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
@@ -49,20 +55,25 @@ export default function Signup() {
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    setMessage("");
     event.preventDefault();
     const validationErrors = validate(formValues);
     setFormErrors(validationErrors);
 
     const hasErrors = Object.values(validationErrors).some(
-      (error) => error !== ""
+      (error) => error !== "",
     );
     if (hasErrors) {
       return;
     }
 
-    const res = await auth.login(formValues.email, formValues.password);
-    if(res){
-      router.replace('/dashboard');
+    const res = await signIn(formValues);
+    if (!res.success) {
+      setMessage(getErrorMessage(res.status));
+    } else {
+      userContext?.setUser(res.data);
+      cookies.set('user', JSON.stringify(res.data));
+      router.push("/dashboard");
     }
   }
 
@@ -110,6 +121,19 @@ export default function Signup() {
             value={formValues.password}
           />
 
+          {message && (
+            <Box sx={{ mt: 2 }}>
+              <Alert
+                severity="error"
+                onClose={() => {
+                  setMessage("");
+                }}
+              >
+                {message}
+              </Alert>
+            </Box>
+          )}
+
           <Button
             type="submit"
             fullWidth
@@ -122,7 +146,6 @@ export default function Signup() {
           <Box sx={{ display: "flex", justifyContent: "center" }}>
             <Typography color="textSecondary">
               Don't have an account?{" "}
-              
               <Link href="/signup" component={NextLink} variant="body2">
                 {"Sign Up"}
               </Link>

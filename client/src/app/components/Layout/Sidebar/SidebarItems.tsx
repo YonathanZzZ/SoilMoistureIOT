@@ -12,13 +12,31 @@ import Link from "next/link";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { DeviceThermostat } from "@mui/icons-material";
 
-export default function SidebarItems() {
+interface Props {
+  logoHeight: number;
+}
+
+export default function SidebarItems({ logoHeight }: Props) {
+  const logoUrl = '/images/soil_logo.png'
+
   return (
     <Box>
-      <Toolbar />
+      <Toolbar sx={{display: 'flex', justifyContent: 'center'}}>
+        
+        <Link href={"/dashboard"} passHref>
+        <Box
+          component="img"
+          src={logoUrl}
+          alt="logo"
+        
+          sx={{ height: `${logoHeight}px`, objectFit: 'cover', display: 'block'}}
+        />
+        </Link>
+
+      </Toolbar>
       <Divider />
       <List>
-      <Link href='/dashboard/devices'>
+        <Link href="/dashboard/devices">
           <ListItem key="Devices" disablePadding>
             <ListItemButton>
               <ListItemIcon>
@@ -29,13 +47,12 @@ export default function SidebarItems() {
             </ListItemButton>
           </ListItem>
         </Link>
-
       </List>
 
       <Divider />
 
       <List>
-        <Link href='/dashboard/add-device'>
+        <Link href="/dashboard/add-device">
           <ListItem key="addDevice" disablePadding>
             <ListItemButton
               sx={{

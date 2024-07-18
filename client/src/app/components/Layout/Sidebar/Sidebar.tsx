@@ -1,14 +1,13 @@
-import {
-  Box,
-  Drawer,
-} from "@mui/material";
+import { Box, Drawer } from "@mui/material";
 import SidebarItems from "./SidebarItems";
+import { log } from "console";
 
 interface Props {
   drawerWidth: number;
   handleDrawerClose: () => void;
   handleDrawerTransitionEnd: () => void;
   mobileOpen: boolean;
+  logoHeight: number;
 }
 
 export default function Sidebar({
@@ -16,6 +15,7 @@ export default function Sidebar({
   handleDrawerClose,
   handleDrawerTransitionEnd,
   mobileOpen,
+  logoHeight,
 }: Props) {
   return (
     <Box
@@ -36,7 +36,7 @@ export default function Sidebar({
           "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
         }}
       >
-        <SidebarItems/>
+        <SidebarItems logoHeight={logoHeight} />
       </Drawer>
       <Drawer
         variant="permanent"
@@ -46,7 +46,7 @@ export default function Sidebar({
         }}
         open
       >
-        <SidebarItems/>
+        <SidebarItems logoHeight={logoHeight} />
       </Drawer>
     </Box>
   );

@@ -2,10 +2,9 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Content from '../components/Content/Content';
-import Header from '../components/Header/Header';
-import Sidebar from '../components/Sidebar/Sidebar';
+import Header from '../components/Layout/Header/Header';
+import Sidebar from '../components/Layout/Sidebar/Sidebar';
+import Main from '../components/Main/Main';
 
 const drawerWidth = 200;
 
@@ -32,19 +31,15 @@ export default function DashboardLayout({children}: Props) {
     }
   };
 
+  const height = 64;
+
   return (
     <Box sx={{ display: 'flex' }}>
-      <Header drawerWidth={drawerWidth} handleDrawerToggle={handleDrawerToggle} />
-      <Sidebar drawerWidth={drawerWidth} mobileOpen={mobileOpen} handleDrawerClose={handleDrawerClose} handleDrawerTransitionEnd={handleDrawerTransitionEnd}/>
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-      >
-        <Toolbar />
-        <Content>
-          {children}
-        </Content>
-      </Box>
+      <Header height={height} drawerWidth={drawerWidth} handleDrawerToggle={handleDrawerToggle} />
+      <Sidebar logoHeight={height} drawerWidth={drawerWidth} mobileOpen={mobileOpen} handleDrawerClose={handleDrawerClose} handleDrawerTransitionEnd={handleDrawerTransitionEnd}/>
+      <Main drawerWidth={drawerWidth}>
+        {children}
+      </Main>
     </Box>
   );
 }

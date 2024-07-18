@@ -14,7 +14,7 @@ import cors from 'cors';
 import measurementRouter from "./routers/measurement.router";
 const RedisStore = require("connect-redis").default;
 const MS_IN_MIN = 1000 * 60;
-const isProduction = process.env.NODE_ENV === "production" ? true : false;
+const isProduction = process.env.NODE_ENV === "production";
 const PORT = process.env.PORT;
 
 const app = express();
@@ -56,7 +56,6 @@ passport.deserializeUser(async (userID: number, done) => {
     if (!user) {
       return done(null, false);
     }
-
     return done(null, user);
   } catch (err) {
     return done(err);

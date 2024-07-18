@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -10,11 +11,11 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../auth/useAuth";
+import { signUp } from "../http/http";
+import { getErrorMessage } from "../utils/ErrorMessages";
 
 export default function Signup() {
   const router = useRouter();
-  const auth = useAuth();
 
   const [formValues, setFormValues] = useState({
     name: "",
@@ -26,6 +27,8 @@ export default function Signup() {
     email: "",
     password: "",
   });
+
+  const [message, setMessage] = useState("");
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -61,48 +64,27 @@ export default function Signup() {
         errors.password = "Password must include at least one uppercase letter";
       }
     }
-
     return errors;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    setMessage("");
     event.preventDefault();
     const validationErrors = validate(formValues);
     setFormErrors(validationErrors);
 
     const hasErrors = Object.values(validationErrors).some(
-      (error) => error !== ""
+      (error) => error !== "",
     );
     if (hasErrors) {
       return;
     }
 
-    try {
-      const response = await fetch(
-        "http://localhost:8080/users/register/password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formValues),
-        }
-      );
-
-      if (!response.ok) {
-        //TODO handle failed registration (user already registered, etc. use status codes to determine the cause and display the correct message to the user)
-        return;
-      }
-
-      const loginRes = await auth.login(formValues.email, formValues.password);
-      if(!loginRes){
-        //show message
-        return;
-      }
-
-      router.push("/dashboard"); //redirect user to main page
-    } catch (error) {
-      //TODO handle errors
+    const res = await signUp(formValues);
+    if (!res.success) {
+      setMessage(getErrorMessage(res.status));
+    } else {
+      router.push("/dashboard");
     }
   }
 
@@ -148,6 +130,7 @@ export default function Signup() {
             onChange={handleChange}
             value={formValues.email}
           />
+
           <TextField
             error={Boolean(formErrors.password)}
             helperText={formErrors.password}
@@ -163,16 +146,24 @@ export default function Signup() {
             value={formValues.password}
           />
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
+          {message && (
+            <Box>
+              <Alert
+                severity="error"
+                onClose={() => {
+                  setMessage("");
+                }}
+              >
+                {message}
+              </Alert>
+            </Box>
+          )}
+
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 1 }}>
             Sign Up
           </Button>
 
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
             <Typography color="textSecondary">
               Already have an account?{" "}
               <Link href="/signin" variant="body2">

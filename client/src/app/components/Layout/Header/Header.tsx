@@ -10,16 +10,18 @@ import AccountMenu from "./AccountMenu";
 
 interface Props {
   drawerWidth: number;
+  height: number;
   handleDrawerToggle: () => void;
 }
 
-export default function Header({ drawerWidth, handleDrawerToggle }: Props) {
+export default function Header({ drawerWidth, height, handleDrawerToggle }: Props) {
   return (
     <AppBar
       position="fixed"
       sx={{
         width: { sm: `calc(100% - ${drawerWidth}px)` },
         ml: { sm: `${drawerWidth}px` },
+        height: `${height}px`
       }}
     >
       <Toolbar>
