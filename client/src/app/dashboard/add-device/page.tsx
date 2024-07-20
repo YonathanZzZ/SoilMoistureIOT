@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  IconButton,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useContext, useState } from "react";
 import { addDevice } from "../../http/http";
@@ -17,10 +11,12 @@ function AddDevice() {
   const [formValues, setFormValues] = useState({
     name: "",
     description: "",
+    image_url: "",
   });
   const [formErrors, setFormErrors] = useState({
     name: "",
     description: "",
+    image_url: "",
   });
 
   const [deviceCredentials, setDeviceCredentials] = useState<{
@@ -36,11 +32,21 @@ function AddDevice() {
     setFormValues({ ...formValues, [name]: value });
   }
 
-  function validate(values: { name: string; description: string }) {
-    const errors = { name: "", description: "" };
+  const imageUrlRegex = /\.(jpg|jpeg|png|webp)$/i;
+
+  function validate(values: {
+    name: string;
+    description: string;
+    image_url: string;
+  }) {
+    const errors = { name: "", description: "", image_url: "" };
 
     if (!values.name) {
       errors.name = "Please enter a device name";
+    }
+
+    if (values.image_url && !imageUrlRegex.test(values.image_url)) {
+      errors.image_url = "URL must end with .jpg, .jpeg, .png or .webp";
     }
 
     return errors;
@@ -52,16 +58,20 @@ function AddDevice() {
     setFormErrors(validationErrors);
 
     const hasErrors = Object.values(validationErrors).some(
-      (error) => error !== ""
+      (error) => error !== "",
     );
     if (hasErrors) {
       return;
     }
 
-    const res = await addDevice(formValues.name, formValues.description);
-    if(!res.success){
+    const res = await addDevice(
+      formValues.name,
+      formValues.description,
+      formValues.image_url,
+    );
+    if (!res.success) {
       const errorMessage = getErrorMessage(res.status);
-      warningContext?.setNewMessage(errorMessage, 'error');
+      warningContext?.setNewMessage(errorMessage, "error");
 
       return;
     }
@@ -74,7 +84,7 @@ function AddDevice() {
   function handleCopyClick(field: string) {
     if (field === "device-id") {
       navigator.clipboard.writeText(deviceCredentials!.deviceID);
-    } else if (field === 'device-secret') {
+    } else if (field === "device-secret") {
       navigator.clipboard.writeText(deviceCredentials!.secretKey);
     }
 
@@ -123,6 +133,19 @@ function AddDevice() {
           minRows={3}
         />
 
+        <TextField
+          error={Boolean(formErrors.image_url)}
+          helperText={formErrors.image_url}
+          margin="normal"
+          fullWidth
+          name="image_url"
+          label="Image URL"
+          id="image_url"
+          autoComplete="current-image_url"
+          onChange={handleChange}
+          value={formValues.image_url}
+        />
+
         <Button
           type="submit"
           fullWidth
@@ -146,26 +169,35 @@ function AddDevice() {
       </Typography>
 
       <Box mt="1em">
-        <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between'>
-        <Typography variant="body1">
-          Device ID: {deviceCredentials.deviceID}
-        </Typography>
+        <Box
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Typography variant="body1">
+            Device ID: {deviceCredentials.deviceID}
+          </Typography>
 
-        <IconButton onClick={() => handleCopyClick('device-id')}>
-          <ContentCopyIcon />
-        </IconButton>
+          <IconButton onClick={() => handleCopyClick("device-id")}>
+            <ContentCopyIcon />
+          </IconButton>
         </Box>
 
-        <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between'>
-        <Typography variant="body1">
-          Device secret key: {deviceCredentials.secretKey}
-        </Typography>
+        <Box
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Typography variant="body1">
+            Device secret key: {deviceCredentials.secretKey}
+          </Typography>
 
-        <IconButton onClick={() => handleCopyClick('device-secret')}>
-          <ContentCopyIcon />
-        </IconButton>
+          <IconButton onClick={() => handleCopyClick("device-secret")}>
+            <ContentCopyIcon />
+          </IconButton>
         </Box>
-        
 
         {/* <Button variant="contained" color="primary" onClick={handleCopyClick}>
           {copied

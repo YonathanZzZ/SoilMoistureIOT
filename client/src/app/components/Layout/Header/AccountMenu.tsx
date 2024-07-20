@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "../../../http/http";
 import { UserContext } from "../../UserContext";
 import { IconButton, Menu, MenuItem, Divider, ListItem } from "@mui/material";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Link from "next/link";
 import { WarningContext } from "../../WarningContext";
 
@@ -26,10 +26,8 @@ export default function AccountMenu() {
   async function handleSignout() {
     const res = await signOut();
     if (!res.success) {
-      //TODO use custom error hook to show warning inside the Main section of the Layout. NOT YET IMPLEMENTED. 
-
-      
-    }else{
+      //TODO use WarningContext to display error message
+    } else {
       router.push("/signin");
     }
   }

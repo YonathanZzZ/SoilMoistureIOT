@@ -5,8 +5,6 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-console.log("baseURL: ", process.env.SERVER_URL);
-
 interface SuccessResponse {
   success: true;
   status: number;
@@ -61,8 +59,12 @@ export async function getDeviceMeasurements(deviceId: string) {
   }
 }
 
-export async function addDevice(name: string, description: string) {
-  const data = { name: name, description: description };
+export async function addDevice(
+  name: string,
+  description: string,
+  image_url: string,
+) {
+  const data = { name: name, description: description, image_url: image_url };
   try {
     const res = await axiosInstance.post("/devices", data);
     return successToResponse(res);

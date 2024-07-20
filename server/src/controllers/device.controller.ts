@@ -5,7 +5,7 @@ import {
   deleteDevice,
   getAllDevicesByUserID,
   updateDevice,
-  getDeviceDataById
+  getDeviceDataById,
 } from "../services/device.service";
 import { HttpStatus } from "../httpStatuses";
 import zod from "zod";
@@ -20,10 +20,15 @@ export const getAllUserDevices = async (req: Request, res: Response) => {
   res.json(devicesData);
 };
 
+const imageUrlRegex = /\.(jpg|jpeg|png|webp)$/i;
+
 const DeviceDataSchema = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
-  image: zod.string().optional(),
+  image_url: zod
+    .string()
+    .optional()
+    .refine((value) => !value || imageUrlRegex.test(value)),
 });
 
 const DeviceDataRequestSchema = zod.object({
@@ -37,16 +42,16 @@ export const getDeviceData = async (req: Request, res: Response) => {
   }
 
   const deviceId = schemaCheck.data.uuid;
-  
+
   const userId = (req.user as SessionUser).id;
-  
+
   const deviceData = await getDeviceDataById(deviceId, userId);
-  if(!deviceData){
+  if (!deviceData) {
     res.sendStatus(HttpStatus.NOT_FOUND);
   }
 
   res.json(deviceData);
-}
+};
 
 export const addDeviceToUser = async (req: Request, res: Response) => {
   const schemaCheck = DeviceDataSchema.safeParse(req.body);
@@ -55,6 +60,7 @@ export const addDeviceToUser = async (req: Request, res: Response) => {
   }
 
   const data = schemaCheck.data;
+  console.log("data: ", data);
   const userId = (req.user as SessionUser).id;
 
   const deviceCredentials = await addDevice(userId, data);
@@ -66,16 +72,16 @@ const uuidSchema = zod.string().uuid();
 
 export const deleteDeviceFromUser = async (req: Request, res: Response) => {
   const schemaCheck = uuidSchema.safeParse(req.params.uuid);
-  if(!schemaCheck.success){
+  if (!schemaCheck.success) {
     return res.sendStatus(HttpStatus.BAD_REQUEST);
   }
 
-  const deviceUUID = schemaCheck.data; 
+  const deviceUUID = schemaCheck.data;
 
   const userId = (req.user as SessionUser).id;
 
   const deleteRes = await deleteDevice(userId, deviceUUID);
-  if(!deleteRes){
+  if (!deleteRes) {
     return res.sendStatus(HttpStatus.NOT_FOUND);
   }
 
@@ -84,19 +90,19 @@ export const deleteDeviceFromUser = async (req: Request, res: Response) => {
 
 const updateSchema = zod.object({
   name: zod.string().optional(),
-  description: zod.string().optional()
+  description: zod.string().optional(),
 });
 
 export const updateUserDevice = async (req: Request, res: Response) => {
   const schemaCheck = uuidSchema.safeParse(req.params.uuid);
-  if(!schemaCheck.success){
+  if (!schemaCheck.success) {
     return res.sendStatus(HttpStatus.BAD_REQUEST);
   }
 
   const deviceUUID = schemaCheck.data;
 
   const updateSchemaCheck = updateSchema.safeParse(req.body);
-  if(!updateSchemaCheck.success){
+  if (!updateSchemaCheck.success) {
     return res.sendStatus(HttpStatus.BAD_REQUEST);
   }
 
@@ -105,9 +111,9 @@ export const updateUserDevice = async (req: Request, res: Response) => {
   const userId = (req.user as SessionUser).id;
 
   const updateRes = await updateDevice(userId, deviceUUID, updateData);
-  if(!updateRes){
+  if (!updateRes) {
     return res.sendStatus(HttpStatus.NOT_FOUND);
   }
 
   res.sendStatus(HttpStatus.OK);
-}
+};

@@ -7,6 +7,7 @@ import { getDeviceData, getDeviceMeasurements } from "../../../http/http";
 import { getErrorMessage } from "../../../utils/ErrorMessages";
 import { useContext, useEffect } from "react";
 import { WarningContext } from "../../../components/WarningContext";
+import { Skeleton } from "@mui/material";
 
 interface ServerMeasurement {
   id: number;
@@ -19,18 +20,18 @@ function Device({ params }: { params: { deviceId: string } }) {
 
   const warningContext = useContext(WarningContext);
 
-  async function fetchDeviceData(){
+  async function fetchDeviceData() {
     const res = await getDeviceData(deviceId);
-    if(!res.success){
+    if (!res.success) {
       throw new CustomError("Failed to fetch device data", res.status);
     }
 
     return res.data;
   }
 
-  async function fetchDeviceMeasurements(){
+  async function fetchDeviceMeasurements() {
     const res = await getDeviceMeasurements(deviceId);
-    if(!res.success){
+    if (!res.success) {
       throw new CustomError("Failed to fetch device measurements", res.status);
     }
 
@@ -57,23 +58,36 @@ function Device({ params }: { params: { deviceId: string } }) {
   const deviceMeasurements = queries[1].data;
 
   useEffect(() => {
-    if(deviceDataError){
+    if (deviceDataError) {
       const message = getErrorMessage(deviceDataError.status);
-      warningContext?.setNewMessage(message + 'while trying to fetch device data', 'error');
-    } else if (deviceMeasurementsError){
+      warningContext?.setNewMessage(
+        message + " while trying to fetch device data",
+        "error",
+      );
+    } else if (deviceMeasurementsError) {
       const message = getErrorMessage(deviceMeasurementsError.status);
-      warningContext?.setNewMessage(message + 'while trying to fetch device measurements', 'error');
+      warningContext?.setNewMessage(
+        message + " while trying to fetch device measurements",
+        "error",
+      );
     }
-  }, [deviceDataError, deviceMeasurementsError]);
+  }, [deviceDataError, deviceMeasurementsError, warningContext]);
 
   const defaultImage =
     "https://www.thespruce.com/thmb/d6mlSpKxdAIaOQBaUDH0S6A3e_k=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/how-to-grow-monstera-deliciosa-5072671-01-a65286b8b3b8402882c7ad2c57756bbe.jpg";
 
   if (isLoading) {
-    return <h1>Loading device data...</h1>; //TODO replace with MUI Skeleton component
+    return (
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height="100%"
+        animation="wave"
+      />
+    );
   }
 
-  if(deviceDataError || deviceMeasurementsError){
+  if (deviceDataError || deviceMeasurementsError) {
     return null;
   }
 
