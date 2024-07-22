@@ -199,11 +199,6 @@ function AddDevice() {
           </IconButton>
         </Box>
 
-        {/* <Button variant="contained" color="primary" onClick={handleCopyClick}>
-          {copied
-            ? "Secret key Copied to clipboard!"
-            : "Copy secret key to Clipboard"}
-        </Button> */}
         <Typography variant="body2" color="error">
           ⚠️ Do not share the secret key with anyone!
         </Typography>
