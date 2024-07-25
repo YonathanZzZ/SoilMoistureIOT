@@ -6,7 +6,9 @@ export default function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith("/dashboard")) {
     //middleware for dashboard pages
     if (!session) {
-      return NextResponse.redirect(new URL("/signin", req.url));
+      const signinUrl = new URL("/signin", req.url);
+      signinUrl.searchParams.set("from", req.nextUrl.pathname);
+      return NextResponse.redirect(signinUrl);
     }
   }
 

@@ -9,13 +9,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useContext, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import NextLink from "next/link";
 import Link from "@mui/material/Link";
 import { signIn } from "../http/http";
 import { getErrorMessage } from "../utils/ErrorMessages";
 import { UserContext } from "../components/UserContext";
-import cookies from 'js-cookie';
+import cookies from "js-cookie";
 export default function Signup() {
   const [formValues, setFormValues] = useState({
     email: "",
@@ -25,6 +25,8 @@ export default function Signup() {
     email: "",
     password: "",
   });
+
+  const searchParams = useSearchParams();
 
   const [message, setMessage] = useState("");
 
@@ -70,11 +72,15 @@ export default function Signup() {
     const res = await signIn(formValues);
     if (!res.success) {
       setMessage(getErrorMessage(res.status));
-    } else {
-      userContext?.setUser(res.data);
-      cookies.set('user', JSON.stringify(res.data));
-      router.push("/dashboard");
+      return;
     }
+
+    userContext?.setUser(res.data);
+    cookies.set("user", JSON.stringify(res.data));
+    const fromUrl = searchParams.get("from");
+    const nextUrl = fromUrl ? fromUrl : "/dashboard";
+
+    router.push(nextUrl);
   }
 
   return (
