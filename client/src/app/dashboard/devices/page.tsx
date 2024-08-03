@@ -1,12 +1,13 @@
 "use client";
 
-import { Grid, Skeleton } from "@mui/material";
+import { Box, Grid, Skeleton, Typography, Link } from "@mui/material";
 import DevicePreview from "../../components/DevicePreview/DevicePreview";
 import { useQuery } from "@tanstack/react-query";
 import { getUserDevices } from "../../http/http";
 import { WarningContext } from "../../components/WarningContext";
 import { useContext, useEffect } from "react";
 import { getErrorMessage } from "../../utils/ErrorMessages";
+import NextLink from "next/link";
 
 function Devices() {
   async function fetchUserDevices() {
@@ -66,6 +67,19 @@ function Devices() {
         animation="wave"
       />
     );
+  }
+
+  if(devices.length === 0){
+    return(
+      <Box>
+        <Typography>Looks like you haven't added any devices yet. {" "}
+          <Link href="/dashboard/add-device" component={NextLink}>
+            Click here to add your first device
+          </Link>
+          .
+        </Typography>
+      </Box>
+    )
   }
 
   return (
